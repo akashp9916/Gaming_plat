@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: cloudplay-demo
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: DEMO_MODE
+        value: "1"
+      - key: MAX_CONCURRENT_SESSIONS
+        value: "4"
+      - key: PUBLIC_HOST
+        value: "https://cloudplay-demo.onrender.com"

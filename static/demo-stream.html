@@ -1,0 +1,4 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CloudPlay Demo</title>
+<style>body{margin:0;background:#07090f;color:#eaf0ff;font:16px system-ui;display:grid;min-height:100vh;place-items:center}.card{max-width:620px;margin:24px;padding:32px;border:1px solid #33405c;border-radius:18px;background:#101729}h1{color:#00e5ff}p{line-height:1.6;color:#b9c5dd}a{color:#00e5ff}</style></head>
+<body><main class="card"><h1>CloudPlay Demo Preview</h1><p id="game"></p><p>This is a demo preview page. It does not run or stream a real game. The sample games and account/session flows are for testing the CloudPlay interface.</p><p><a href="/">← Back to CloudPlay</a></p></main><script>const q=new URLSearchParams(location.search);document.getElementById('game').textContent='Selected game: '+(q.get('game')||'Sample game');</script></body></html>

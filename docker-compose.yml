@@ -1,0 +1,24 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      JWT_SECRET: ${JWT_SECRET:-local-demo-only-change-me}
+      PUBLIC_HOST: ${PUBLIC_HOST:-http://localhost:8000}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-you@example.com}
+      DEMO_MODE: "1"
+      MAX_CONCURRENT_SESSIONS: "4"
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:
