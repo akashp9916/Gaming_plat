@@ -1,4 +1,64 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CloudPlay Demo</title>
-<style>body{margin:0;background:#07090f;color:#eaf0ff;font:16px system-ui;display:grid;min-height:100vh;place-items:center}.card{max-width:620px;margin:24px;padding:32px;border:1px solid #33405c;border-radius:18px;background:#101729}h1{color:#00e5ff}p{line-height:1.6;color:#b9c5dd}a{color:#00e5ff}</style></head>
-<body><main class="card"><h1>CloudPlay Demo Preview</h1><p id="game"></p><p>This is a demo preview page. It does not run or stream a real game. The sample games and account/session flows are for testing the CloudPlay interface.</p><p><a href="/">← Back to CloudPlay</a></p></main><script>const q=new URLSearchParams(location.search);document.getElementById('game').textContent='Selected game: '+(q.get('game')||'Sample game');</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo stream</title>
+<style>
+html,body{margin:0;height:100%;background:#05070b;color:#e8ecf3;font:14px system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#badge{position:fixed;top:10px;left:12px;background:#7c5cff;padding:4px 10px;border-radius:99px;font-size:12px}
+#hud{margin-bottom:8px;color:#8b95a8}
+canvas{background:#0e1117;border:2px solid #262d3b;border-radius:10px;max-width:92vw;max-height:70vh}
+#msg{margin-top:10px;color:#00d4aa}
+</style>
+</head>
+<body>
+<div id="badge">DEMO STREAM</div>
+<div id="hud"><b id="title">Game</b> &middot; Score: <span id="score">0</span></div>
+<canvas id="c" width="400" height="400"></canvas>
+<div id="msg">Click the game, then use arrow keys / WASD. Press Space to restart.</div>
+<script>
+const q = new URLSearchParams(location.search);
+document.getElementById('title').textContent = q.get('game') || 'Demo game';
+const c = document.getElementById('c'), x = c.getContext('2d'), N = 20, S = c.width / N;
+let snake, dir, food, score, dead, timer;
+
+function reset() {
+  snake = [{x: 10, y: 10}, {x: 9, y: 10}, {x: 8, y: 10}];
+  dir = {x: 1, y: 0}; score = 0; dead = false; place();
+  clearInterval(timer); timer = setInterval(tick, 110); draw();
+}
+function place() {
+  do { food = {x: Math.floor(Math.random() * N), y: Math.floor(Math.random() * N)}; }
+  while (snake.some(s => s.x === food.x && s.y === food.y));
+}
+function tick() {
+  if (dead) return;
+  const h = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+  if (h.x < 0 || h.y < 0 || h.x >= N || h.y >= N || snake.some(s => s.x === h.x && s.y === h.y)) { dead = true; draw(); return; }
+  snake.unshift(h);
+  if (h.x === food.x && h.y === food.y) { score++; document.getElementById('score').textContent = score; place(); }
+  else snake.pop();
+  draw();
+}
+function draw() {
+  x.fillStyle = '#0e1117'; x.fillRect(0, 0, c.width, c.height);
+  x.fillStyle = '#ff5c6c'; x.fillRect(food.x * S + 2, food.y * S + 2, S - 4, S - 4);
+  snake.forEach((s, i) => { x.fillStyle = i ? '#00d4aa' : '#7c5cff'; x.fillRect(s.x * S + 1, s.y * S + 1, S - 2, S - 2); });
+  if (dead) {
+    x.fillStyle = '#000a'; x.fillRect(0, 0, c.width, c.height);
+    x.fillStyle = '#fff'; x.font = 'bold 28px system-ui'; x.textAlign = 'center';
+    x.fillText('Game over', c.width / 2, c.height / 2 - 8);
+    x.font = '16px system-ui'; x.fillText('Press Space to play again', c.width / 2, c.height / 2 + 22);
+  }
+}
+addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  const map = {arrowup: [0, -1], w: [0, -1], arrowdown: [0, 1], s: [0, 1], arrowleft: [-1, 0], a: [-1, 0], arrowright: [1, 0], d: [1, 0]};
+  if (map[k]) { const [dx, dy] = map[k]; if (dx !== -dir.x || dy !== -dir.y) dir = {x: dx, y: dy}; e.preventDefault(); }
+  if (k === ' ') { reset(); e.preventDefault(); }
+});
+reset();
+</script>
+</body>
+</html>

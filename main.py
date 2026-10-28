@@ -1,3 +1,9 @@
+"""
+CloudPlay backend: FastAPI + MongoDB (Motor).
+
+Run:  uvicorn main:app --host 0.0.0.0 --port 8000
+Docs: http://localhost:8000/docs
+"""
 import asyncio
 import os
 import secrets
@@ -70,21 +76,26 @@ async def seed_demo():
             "total_playtime_seconds": 0,
             "created_at": utcnow(),
         })
-    samples = [
-        ("Cyber Racer 2077", "cyber-racer", ["racing", "open world"], 120.5, "Neon street racing in a huge open city."),
-        ("Dragon Realms", "dragon-realms", ["rpg", "fantasy"], 95.0, "Epic fantasy RPG with a 90 GB world."),
-        ("Galaxy Wars", "galaxy-wars", ["shooter", "sci-fi"], 70.2, "Fast space combat with up to 64 players."),
-        ("Pixel Farm", "pixel-farm", ["casual", "simulation"], 2.1, "Relaxing farming game."),
+    samples = [  # title, slug, year, genres, size_gb, starting plays, description
+        ("Cyberpunk 2077", "cyberpunk-2077", 2020, ["Action", "Adventure"], 70.0, 90, "An action role-playing game set in Night City, an open world in the Cyberpunk universe. Hack, fight and drive through a neon megacity."),
+        ("Minecraft", "minecraft", 2011, ["Sandbox", "Adventure"], 1.0, 120, "Build, mine and survive in an endless world made of blocks."),
+        ("Apex Legends", "apex-legends", 2019, ["Shooter", "Battle royale"], 56.0, 110, "Squad-based battle royale with unique legends and fast movement."),
+        ("Need for Speed: Heat", "need-for-speed-heat", 2019, ["Racing", "Open world"], 50.0, 80, "Race by day, risk everything by night."),
+        ("Red Dead Redemption 2", "red-dead-redemption-2", 2018, ["Action", "Open world"], 120.0, 100, "Outlaw life at the end of the Wild West era."),
+        ("FIFA 22", "fifa-22", 2021, ["Sports", "Football"], 50.0, 95, "Play the world's game with realistic football action."),
+        ("Spider-Man: Miles Morales", "spider-man-miles-morales", 2020, ["Action", "Adventure"], 50.0, 70, "Swing through a snowy New York as a new hero."),
     ]
-    for title, slug, genre, size, desc in samples:
+    # replace the older sample lineup; real games (docker_image != "demo") are never touched
+    await db.games.delete_many({"docker_image": "demo", "slug": {"$nin": [s[1] for s in samples]}})
+    for i, (title, slug, year, genre, size, plays, desc) in enumerate(samples):
         await db.games.update_one(
             {"slug": slug},
-            {"$setOnInsert": {
-                "title": title, "description": desc, "cover_url": "", "genre": genre,
-                "size_gb": size, "docker_image": "demo", "executable": "demo.exe",
+            {"$set": {
+                "title": title, "description": desc, "cover_url": f"/covers/{slug}.svg", "year": year,
+                "genre": genre, "size_gb": size, "docker_image": "demo", "executable": "demo.exe",
                 "cpus": 4, "memory_limit": "16g", "resolution": "1920x1080",
-                "created_at": utcnow(), "play_count": 0,
-            }},
+            },
+             "$setOnInsert": {"created_at": utcnow() - timedelta(days=i), "play_count": plays}},
             upsert=True,
         )
 
@@ -152,6 +163,7 @@ class GameIn(BaseModel):
     cpus: int = 4
     memory_limit: str = "16g"
     resolution: str = "1920x1080"
+    year: int = 0
 
 
 # ---------- auth ----------
@@ -342,6 +354,12 @@ async def reaper_loop():
             raise
         except Exception as e:
             print("reaper error:", e)
+
+
+@app.get("/config")
+async def config():
+    """Lets the login page show the demo account (only when DEMO_MODE=1)."""
+    return {"demo": DEMO_MODE, "email": DEMO_EMAIL if DEMO_MODE else "", "password": DEMO_PASSWORD if DEMO_MODE else ""}
 
 
 @app.get("/health")
