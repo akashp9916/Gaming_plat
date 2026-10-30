@@ -92,3 +92,9 @@ CloudPlay backend: FastAPI + MongoDB (Motor).
 Run:  uvicorn main:app --host 127.0.0.1 --port 9000 --reload
 Docs: http://localhost:8000/docs
 """
+"""
+CloudPlay backend: FastAPI + MongoDB (Motor).
+
+Run:  uvicorn main:app --host 0.0.0.0 --port 8000
+Docs: http://localhost:8000/docs
+"""
